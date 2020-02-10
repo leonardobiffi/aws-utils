@@ -7,19 +7,19 @@ This function is for creating AMI as a backup for all required instances based o
 * Python library Pytz
 * Python library Requests
 * Lambda Role which you use requires EC2-Read access, AMI Full access and Resource Tagging access in case if you want to configure through Lambda
-* All the instances which needs AMI backup has to be tagged and that tag will be used by Lambda function to identify those instances(here we are using tag Key:AMIBACKUPON, Value:yes)
+* All the instances which needs AMI backup has to be tagged and that tag will be used by Lambda function to identify those instances(here we are using tag Key:AMI_BACKUP_ON, Value:yes)
 
 
 ## How it Works?
 
 ### AMI Backup
 
-This will delete AMI's created through this script and older than number days you provide as input and creates the new AMI for an instance and same AMI will be tagged by fetching all tags from instance, two extra tags DELETEON=yes and Snapshottag=yes will be added inorder to identify AMI's while tagging snapshots and deleting older AMI's, so basically any AMI with DELETEON=yes will be deleted when you run the script based on number of days you provide to keep AMI's.
+This will delete AMI's created through this script and older than number days you provide as input and creates the new AMI for an instance and same AMI will be tagged by fetching all tags from instance, two extra tags DELETE_ON=yes and SNAPSHOT_TAG=yes will be added inorder to identify AMI's while tagging snapshots and deleting older AMI's, so basically any AMI with DELETE_ON=yes will be deleted when you run the script based on number of days you provide to keep AMI's.
 
-Tag DELETEON=yes is used to identify the AMI's which are supposed to be deleted after given number of days.
-Tag Snapshottag=yes is used to identify the AMI's of which Snapshots needs to be tagged.
+Tag DELETE_ON=yes is used to identify the AMI's which are supposed to be deleted after given number of days.
+Tag SNAPSHOT_TAG=yes is used to identify the AMI's of which Snapshots needs to be tagged.
 
-Once the snapshots are tagged the tag Snapshottag=yes will be deleted from AMI.
+Once the snapshots are tagged the tag SNAPSHOT_TAG=yes will be deleted from AMI.
 
 ## Exception handler:
 
@@ -28,14 +28,14 @@ Once the snapshots are tagged the tag Snapshottag=yes will be deleted from AMI.
 
 ## Some of the examples to run the script
 
-* To create AMI's for the instances having tag Key:AMIBACKUPON Value:yes in us-east-1 region and to delete AMI's/Snapshots created through this script, also which are older than 10 days and to post exception in slack
+* To create AMI's for the instances having tag Key:AMI_BACKUP_ON Value:yes in us-east-1 region and to delete AMI's/Snapshots created through this script, also which are older than 10 days and to post exception in slack
 
 ```python
  python ami_backup.py -r us-east-1 -d 10 -s true -c "#ami_bkp_lambda" -w "https://hooks.slack.com/*********/*****"
 ``` 
 Please see the link for more information on how to generate webhook url for slack https://api.slack.com/incoming-webhooks
 
-* To create AMI's for the instances having tag Key:AMIBACKUPON Value:yes in us-west-2 region and to delete AMI's/Snapshots created through this script, also which are older than 5 days and not to post slack message.
+* To create AMI's for the instances having tag Key:AMI_BACKUP_ON Value:yes in us-west-2 region and to delete AMI's/Snapshots created through this script, also which are older than 5 days and not to post slack message.
 
 ```python
  python ami_backup.py -r us-west-2 -d 5 

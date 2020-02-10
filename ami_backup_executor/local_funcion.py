@@ -241,5 +241,35 @@ def amibkp(region, days_del, slack_req, slack_channel, slack_webhook):
     tag_snapshots(new_image_response, slack_req, slack_channel, slack_webhook, client, region)
 
 
-def lambda_handler(event, context):
-    amibkp('us-east-1', 5, 'false', 'null', 'null')
+def fetch_args():
+    """
+    Is an arguments parser which showcases all possible arguments this python function takes in.
+    """
+    parser = \
+        argparse.ArgumentParser(description=''' Provide AWS region and number of days
+                                to keep AMI and optional slack details:example
+                                python ami_backup.py -r "us-east-1" -d 10 -s true -c "#AWS_BKP",
+                                -w "https://hooks.slack.com/************" ''')
+    parser.add_argument('-r', metavar='--region', required=True,
+                        help='''Provide the AWS region code, for example:  us-east-1 ''')
+    parser.add_argument('-d', metavar='--days', type=int, required=True,
+                        help='''Number of days you want to keep AMI, for example: 10 ''')
+    parser.add_argument('-s', metavar='--slack',
+                        help='''Please provide true if you want to send exception to slack ''')
+    parser.add_argument('-c', metavar='--slack_channel',
+                        help='''Slack channel, for example: "#channel_name" ''')
+    parser.add_argument('-w', metavar='--webhookurl',
+                        help='''Slack webhook URL,
+                        for example: "https://hooks.slack.com/************#########**********####",
+                        see the link for information: https://api.slack.com/incoming-webhooks ''')
+
+    return parser
+
+
+if __name__ == '__main__':
+    PARSER = fetch_args()
+    ARGS = PARSER.parse_args()
+    if ARGS.s == 'true' and not (ARGS.c and  ARGS.w):
+        PARSER.error('If slack argument is true, it requires slack_channel and webhookurl')
+
+    amibkp(ARGS.r, ARGS.d, ARGS.s, ARGS.c, ARGS.w)
