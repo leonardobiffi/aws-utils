@@ -1,7 +1,7 @@
 import boto3
 
-# WorkspaceIds not to be in the script rule
-WORKSPACES_EXCEPTION = ['ws-c15w7xvfn']
+# List WorkspaceIds not to be in the script rule
+WORKSPACES_EXCEPTION = []
 
 def execute_workspaces(command):
 	"""
