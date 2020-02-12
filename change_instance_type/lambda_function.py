@@ -62,7 +62,32 @@ def verify_holiday(today):
 		return False
 
 
-def change_instance_type(day_type):
+def verify_not_default(today):
+
+	client = boto3.client('ec2')
+
+	response = client.describe_instances(
+		Filters=[
+			{
+				'Name': 'tag-key',
+				'Values': ['NOT_DEFAULT']
+			}
+		]
+	)
+
+	instancelist = []
+	
+	for reservation in (response["Reservations"]):
+		for instance in reservation["Instances"]:
+			instancelist.append(instance["InstanceId"])
+
+	if len(instancelist) > 0:
+		return True
+	else:
+		return False
+
+
+def change_instance_type(day_type, tag):
 	
 	# Let's use Amazon EC2
 	ec2 = boto3.client('ec2')
@@ -81,6 +106,13 @@ def change_instance_type(day_type):
 		# Change the instance type
 		ec2.modify_instance_attribute(InstanceId=instance["instance_id"], Attribute='instanceType', Value=instance[day_type])
 
+		# Remove tag
+		ec2.delete_tags(Resources=[instance["instance_id"]],Tags=[{"Key": "NOT_DEFAULT"}])
+		ec2.delete_tags(Resources=[instance["instance_id"]],Tags=[{"Key": "DEFAULT"}])
+
+		# Define tag
+		ec2.create_tags(Resources=[instance["instance_id"]],Tags=[{'Key': tag, 'Value': 'True'}])
+
 		# Start the instance
 		ec2.start_instances(InstanceIds=[instance["instance_id"]])
 
@@ -90,16 +122,22 @@ def change_instance_type(day_type):
 def lambda_handler(event, context):
 
 	today = datetime.today()
+	# Test in specific day
 	#today = datetime.strptime('01/01/20', '%d/%m/%y')
 
 	if verify_weekday(today):
 		print("Day into Weekday")
-		change_instance_type("holiday_weekday")
+		change_instance_type(day_type="holiday_weekday", tag="NOT_DEFAULT")
 	
 	elif verify_holiday(today):
 		print("Day into Holiday")
-		change_instance_type("holiday_weekday")
+		change_instance_type(day_type="holiday_weekday", tag="NOT_DEFAULT")
+
+	elif verify_not_default(today):
+		change_instance_type(day_type="default", tag="DEFAULT")
 
 	else:
-		print("Day into Default Day")
-		change_instance_type("default")
+		print('Default Day')
+		
+
+lambda_handler(None, None)
