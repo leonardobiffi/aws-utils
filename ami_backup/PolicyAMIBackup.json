@@ -19,16 +19,18 @@
             "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
-                "ec2:DescribeImages",
                 "ec2:DeregisterImage",
                 "ec2:DescribeInstances",
+                "ec2:DeleteTags",
+                "ec2:CreateTags",
                 "ec2:DescribeSnapshotAttribute",
                 "ec2:DescribeInstanceAttribute",
-                "ec2:DescribeImageAttribute",
                 "logs:*",
                 "ec2:CreateImage",
                 "ec2:DescribeSnapshots",
                 "ec2:DescribeInstanceCreditSpecifications",
+                "ec2:DescribeImages",
+                "ec2:DescribeImageAttribute",
                 "ec2:DescribeInstanceStatus"
             ],
             "Resource": "*"
