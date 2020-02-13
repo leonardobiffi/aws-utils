@@ -16,7 +16,7 @@ TYPE_CODE = ['1']
 
 # Number Days of the Week
 # 0 - Monday, 1 - Tuesday, 2 - Wednesday, 3 - Thursday, 4 - Friday, 5 - Saturday, 6 - Sunday
-WEEK_DAY = ['5', '6']
+WEEKDAY = ['5', '6']
 
 # List of Instances with types
 INSTANCES_TYPES = [
@@ -31,8 +31,13 @@ def verify_weekday(today):
 
 	weekno = str(today.weekday())
 	
-	if weekno in WEEK_DAY:
-		return True
+	if weekno in WEEKDAY:
+		if filter_instance_tag(tag='WEEKDAY'):
+			# Caso já esteja com a tag WEEKDAY não altera novamente
+			return "WEEKDAY"
+		else:
+			# Retorna True para alterar o tipo da instancia
+			return True
 	else:
 		return False
 
@@ -57,12 +62,25 @@ def verify_holiday(today):
 	today = [x for x in holidays if x['date'] == date_today]
 
 	if today:
-		return True
+		if filter_instance_tag(tag='HOLIDAY'):
+			# Caso já esteja com a tag HOLIDAY não altera novamente
+			return "HOLIDAY"
+		else:
+			# Retorna True para alterar o tipo da instancia
+			return True
 	else:
 		return False
 
+def verify_default(today):
 
-def verify_not_default(today):
+	if filter_instance_tag(tag='DEFAULT'):
+		# Caso já esteja com a tag DEFAULT não altera novamente
+		return "DEFAULT"
+	else:
+		# Retorna True para alterar o tipo da instancia
+		return True
+
+def filter_instance_tag(tag):
 
 	client = boto3.client('ec2')
 
@@ -70,7 +88,7 @@ def verify_not_default(today):
 		Filters=[
 			{
 				'Name': 'tag-key',
-				'Values': ['NOT_DEFAULT']
+				'Values': [tag]
 			}
 		]
 	)
@@ -107,8 +125,9 @@ def change_instance_type(day_type, tag):
 		ec2.modify_instance_attribute(InstanceId=instance["instance_id"], Attribute='instanceType', Value=instance[day_type])
 
 		# Remove tag
-		ec2.delete_tags(Resources=[instance["instance_id"]],Tags=[{"Key": "NOT_DEFAULT"}])
 		ec2.delete_tags(Resources=[instance["instance_id"]],Tags=[{"Key": "DEFAULT"}])
+		ec2.delete_tags(Resources=[instance["instance_id"]],Tags=[{"Key": "WEEKDAY"}])
+		ec2.delete_tags(Resources=[instance["instance_id"]],Tags=[{"Key": "HOLIDAY"}])
 
 		# Define tag
 		ec2.create_tags(Resources=[instance["instance_id"]],Tags=[{'Key': tag, 'Value': 'True'}])
@@ -123,21 +142,42 @@ def lambda_handler(event, context):
 
 	today = datetime.today()
 	# Test in specific day
-	#today = datetime.strptime('01/01/20', '%d/%m/%y')
+	#today = datetime.strptime('17/02/20', '%d/%m/%y')
 
-	if verify_weekday(today):
-		print("Day into Weekday")
-		change_instance_type(day_type="holiday_weekday", tag="NOT_DEFAULT")
-	
-	elif verify_holiday(today):
-		print("Day into Holiday")
-		change_instance_type(day_type="holiday_weekday", tag="NOT_DEFAULT")
-
-	elif verify_not_default(today):
-		change_instance_type(day_type="default", tag="DEFAULT")
-
-	else:
-		print('Default Day')
+	while True:
 		
+		####### Weekday #######
+		verify = verify_weekday(today)
+		
+		if verify == True:
+			print("Day into Weekday")
+			change_instance_type(day_type="holiday_weekday", tag="WEEKDAY")
+			break
+		
+		elif verify == 'WEEKDAY':
+			print("Not change aplly, still a Weekday")
+			break
+		
+		####### Holiday #######
+		verify = verify_holiday(today)
+		
+		if verify == True:
+			print("Day into Holiday")
+			change_instance_type(day_type="holiday_weekday", tag="HOLIDAY")
+			break
 
-lambda_handler(None, None)
+		elif verify == 'HOLIDAY':
+			print("Not change aplly, still a Holiday")
+			break
+
+		####### Default day #######
+		verify = verify_default(today)
+
+		if verify == True:
+			print("Day is default day")
+			change_instance_type(day_type="default", tag="DEFAULT")
+			break
+
+		elif verify == 'DEFAULT':
+			print("Not change aplly, still a Default day")
+			break
