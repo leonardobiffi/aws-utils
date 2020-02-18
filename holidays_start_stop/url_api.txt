@@ -1,0 +1,7 @@
+
+-- JSON
+
+https://api.calendario.com.br/?ano=2020&estado=MG&cidade=BELO_HORIZONTE&token=bGVvbmFyZG9iaWZmaUBteWxpbnV4LmNvbS5iciZoYXNoPTEzMDE2MjU2NQ&json=true
+
+-- XML
+https://api.calendario.com.br/?ano=2020&estado=MG&cidade=BELO_HORIZONTE&token=bGVvbmFyZG9iaWZmaUBteWxpbnV4LmNvbS5iciZoYXNoPTEzMDE2MjU2NQ
