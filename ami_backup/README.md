@@ -4,10 +4,10 @@ This function is for creating AMI as a backup for all required instances based o
 
 ## Prerequisites
 
-* Python library Pytz
-* Python library Requests
+* Python library dateutil.tz
+* Python library urllib3
 * Lambda Role which you use requires EC2-Read access, AMI Full access and Resource Tagging access in case if you want to configure through Lambda
-* All the instances which needs AMI backup has to be tagged and that tag will be used by Lambda function to identify those instances(here we are using tag Key:AMI_BACKUP_ON, Value:yes)
+* All the instances which needs AMI backup has to be tagged and that tag will be used by Lambda function to identify those instances(here we are using tag Key:Backup, Value:true)
 
 
 ## How it Works?
@@ -18,6 +18,7 @@ This will delete AMI's created through this script and older than number days yo
 
 Tag DELETE_ON=yes is used to identify the AMI's which are supposed to be deleted after given number of days.
 Tag SNAPSHOT_TAG=yes is used to identify the AMI's of which Snapshots needs to be tagged.
+Tag RetentionDays=7 is used to specify number of days to retention AMI. If there is no tag in the instance it will be used the default defined in function
 
 Once the snapshots are tagged the tag SNAPSHOT_TAG=yes will be deleted from AMI.
 
@@ -28,14 +29,14 @@ Once the snapshots are tagged the tag SNAPSHOT_TAG=yes will be deleted from AMI.
 
 ## Some of the examples to run the script
 
-* To create AMI's for the instances having tag Key:AMI_BACKUP_ON Value:yes in us-east-1 region and to delete AMI's/Snapshots created through this script, also which are older than 10 days and to post exception in slack
+* To create AMI's for the instances having tag Key:Backup Value:true in us-east-1 region and to delete AMI's/Snapshots created through this script, also which are older than 10 days and to post exception in slack
 
 ```python
  python ami_backup.py -r us-east-1 -d 10 -s true -c "#ami_bkp_lambda" -w "https://hooks.slack.com/*********/*****"
 ``` 
 Please see the link for more information on how to generate webhook url for slack https://api.slack.com/incoming-webhooks
 
-* To create AMI's for the instances having tag Key:AMI_BACKUP_ON Value:yes in us-west-2 region and to delete AMI's/Snapshots created through this script, also which are older than 5 days and not to post slack message.
+* To create AMI's for the instances having tag Key:Backup Value:true in us-west-2 region and to delete AMI's/Snapshots created through this script, also which are older than 5 days and not to post slack message.
 
 ```python
  python ami_backup.py -r us-west-2 -d 5 

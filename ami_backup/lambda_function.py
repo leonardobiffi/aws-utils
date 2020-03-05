@@ -33,12 +33,23 @@ def slack(event, channel, webhookurl):
 def delete_ami(image_jsonresponse, days_older, slack_opt, channel_name, webhook_url, ec2, region):
     """
     This function deletes AMI older than number of days to keep AMI.
-
+    ex. The tag Key:RetentionDays, Value:7 will retein AMI for 7 days, ignoring default in lambda_handler
     """
-    right_now_days_ago = datetime.datetime.today() - datetime.timedelta(days=days_older)
-    old_date = right_now_days_ago.replace(tzinfo=UTC)
-
     for i in image_jsonresponse['Images']:
+
+        # get RetentionDays in TAG
+        try:
+            retention_days = [int(t.get('Value')) for t in i['Tags'] if t['Key'] == 'RetentionDays'][0]
+        except IndexError:
+            retention_days = days_older
+        except ValueError:
+            retention_days = days_older
+        except Exception as e:    
+            retention_days = days_older
+
+        right_now_days_ago = datetime.datetime.today() - datetime.timedelta(days=retention_days)
+        old_date = right_now_days_ago.replace(tzinfo=UTC)
+
         if i['CreationDate'] < str(old_date):
             image_id = i['ImageId']
             print('Image ID' + str(image_id))
@@ -177,7 +188,7 @@ def tag_snapshots(new_image_jsonresponse, slack_opt, channel_name, webhook_url, 
 def amibkp(region, days_del, slack_req, slack_channel, slack_webhook):
     """
     This function is the crucial function,
-    fetches all the instances which has tag Key:AMI_BACKUP_ON, Value:yes and creates AMI in a loop,
+    fetches all the instances which has tag Key:Backup, Value:true and creates AMI in a loop,
     along with propogating all the tags from instance to AMI to EBS Snapshots.
     Also, it deletes all the AMI's which was created through this script
     and older than number of days you provide as an argument.
@@ -219,9 +230,9 @@ def amibkp(region, days_del, slack_req, slack_channel, slack_webhook):
     instance_response = client.describe_instances(
         Filters=[
             {
-                'Name': 'tag:AMI_BACKUP_ON', #Tag used to identify list of Instances to be backed up.
+                'Name': 'tag:Backup', #Tag trued to identify list of Instances to be backed up.
                 'Values': [
-                    'yes',
+                    'true',
                 ]
             }
         ]
@@ -239,7 +250,6 @@ def amibkp(region, days_del, slack_req, slack_channel, slack_webhook):
         ]
     )
     tag_snapshots(new_image_response, slack_req, slack_channel, slack_webhook, client, region)
-
 
 def lambda_handler(event, context):
     amibkp('us-east-1', 5, 'false', 'null', 'null')
