@@ -7,6 +7,8 @@ import urllib3
 import boto3
 from dateutil.tz import UTC
 
+CLIENTE='IAG Conta Produção - TESTE'
+
 def slack(event, channel, webhookurl):
     """
     This function is used to post message to slack.
@@ -68,7 +70,7 @@ def delete_ami(image_jsonresponse, days_older, slack_opt, channel_name, webhook_
                     print("AMI snapshot ID deleted " + snap_list[k])
             except Exception as e:
                 print(e)
-                message = 'Error while deleting image\nImageId:'+image_id+' \
+                message = 'Cliente: '+ CLIENTE +'\nError while deleting image\nImageId:'+image_id+' \
                                   \nRegion:'+region+'\nException:'+str(e)
                 if slack_opt == 'true':
                     slack(message, channel_name, webhook_url)
@@ -124,7 +126,7 @@ def create_ami(instance_jsonresponse, slack_opt, channel_name, webhook_url, ec2,
                 )
             except Exception as e:
                 print(e)
-                message = 'Error while creating image of instance\n\nInstanceId:'+ iid +' \
+                message = 'Cliente: '+ CLIENTE +'\nError while creating image of instance\n\nInstanceId:'+ iid +' \
                             \n\n Region:'+ region +'\n\n Exception:'+ str(e)
                 if slack_opt == 'true':
                     slack(message, channel_name, webhook_url)
@@ -165,7 +167,7 @@ def tag_snapshots(new_image_jsonresponse, slack_opt, channel_name, webhook_url, 
                     )
             except Exception as e:
                 print(e)
-                message = 'Error while creating tags on snapshots of AMI\nAMIId:'+image_id+' \
+                message = 'Cliente: '+ CLIENTE +'\nError while creating tags on snapshots of AMI\nAMIId:'+image_id+' \
                             \nRegion:'+region+'\nException:'+ str(e)
                 if slack_opt == 'true':
                     slack(message, channel_name, webhook_url)
@@ -233,6 +235,7 @@ def amibkp(region, days_del, slack_req, slack_channel, slack_webhook):
                 'Name': 'tag:Backup', #Tag trued to identify list of Instances to be backed up.
                 'Values': [
                     'true',
+                    'True'
                 ]
             }
         ]
@@ -252,4 +255,4 @@ def amibkp(region, days_del, slack_req, slack_channel, slack_webhook):
     tag_snapshots(new_image_response, slack_req, slack_channel, slack_webhook, client, region)
 
 def lambda_handler(event, context):
-    amibkp('us-east-1', 5, 'false', 'null', 'null')
+    amibkp('us-east-1', 5, 'true', 'alerts_backup', 'https://hooks.slack.com/services/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')
