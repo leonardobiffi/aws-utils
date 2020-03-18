@@ -3,33 +3,27 @@
 import argparse
 import datetime
 import json
-import urllib3
+from urllib import request, parse
+import json
 import boto3
 from dateutil.tz import UTC
 
-CLIENTE='IAG Conta Produção - TESTE'
+CLIENTE='Nome do Cliente'
 
-def slack(event, channel, webhookurl):
+def slack(message, channel, webhookurl):
     """
     This function is used to post message to slack.
     """
-    message = 'AMI_BACKUP_ALERT'
-    payload = {
-            'channel': channel,
-            'username': "AMI_BACKUP_SCRIPT",
-            'text': message,
-            'attachments': [
-                {
-                   'color': 'danger',
-                   'fields': [{'value': event}]
-                   }
-            ]
-        }
+    post = {"text": "{0}".format(message)}
 
-    req = urllib3.Request(webhookurl)
-    req.add_header('Content-Type', 'application/json')
-
-    response = urllib3.urlopen(req, json.dumps(payload))
+    try:
+        json_data = json.dumps(post)
+        req = request.Request(webhookurl,
+                              data=json_data.encode('ascii'),
+                              headers={'Content-Type': 'application/json'}) 
+        resp = request.urlopen(req)
+    except Exception as em:
+        print("EXCEPTION: " + str(em))
 
 
 def delete_ami(image_jsonresponse, days_older, slack_opt, channel_name, webhook_url, ec2, region):
