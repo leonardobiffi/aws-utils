@@ -143,7 +143,7 @@ def tag_snapshots(new_image_jsonresponse, slack_opt, channel_name, webhook_url, 
             snap_tag_value_list.append(k['Value'])
 
         for j in i['BlockDeviceMappings']:
-            if 'Ebs'in j:
+            if 'Ebs'in j and 'SnapshotId' in j['Ebs']:
                 snapid = j["Ebs"]["SnapshotId"]
 
             try:
