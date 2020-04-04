@@ -36,3 +36,6 @@ FROM   gv$session s
        Join Gv$process P On P.Addr = S.Paddr And P.Inst_Id = S.Inst_Id
 Where  S.Type != 'BACKGROUND'
   AND s.username = UPPER('CONSINCOMONITOR');
+
+
+SELECT 'begin rdsadmin.rdsadmin_util.disconnect('||sid||','||serial#||'); end;' FROM v$session WHERE USERNAME = 'CONSINCO';
