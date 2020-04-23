@@ -43,3 +43,6 @@ begin
         sid    => 2378, 
         serial => 325);
 end;
+
+
+SELECT 'begin rdsadmin.rdsadmin_util.disconnect('||sid||','||serial#||'); end;' FROM v$session WHERE USERNAME = 'CONSINCO';
