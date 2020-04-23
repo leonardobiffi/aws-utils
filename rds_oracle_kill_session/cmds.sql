@@ -25,14 +25,21 @@ serial => 4359,
 method => 'IMMEDIATE');
 end;
 
+
 SELECT s.inst_id,
        s.sid,
        s.serial#,
        p.spid,
        S.Username,
        S.Program,
-       'exec rdsadmin.rdsadmin_util.kill('||s.sid||','||s.serial#||');' as Execute_command
+       'begin rdsadmin.rdsadmin_util.kill('||s.sid||','||s.serial#||'); end;' as Execute_command
 FROM   gv$session s
        Join Gv$process P On P.Addr = S.Paddr And P.Inst_Id = S.Inst_Id
 Where  S.Type != 'BACKGROUND'
   AND s.username = UPPER('CONSINCOMONITOR');
+ 
+begin
+    rdsadmin.rdsadmin_util.kill(
+        sid    => 2378, 
+        serial => 325);
+end;
